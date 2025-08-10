@@ -96,6 +96,14 @@ void DiffDrive::update() {
   v_ = 0.5f * (vL_ + vR_);
   w_ = (vR_ - vL_) / track_;
 
+  // Odom
+  float dth  = w_ * dt;
+  float th_mid = odom_.yaw + 0.5f * dth;
+
+  odom_.x   += v_ * dt * cosf(th_mid);
+  odom_.y   += v_ * dt * sinf(th_mid);
+  odom_.yaw  = wrapPi_(odom_.yaw + dth);
+
   prevCntL_ = cntL;
   prevCntR_ = cntR;
   tPrev_ = now;
@@ -103,7 +111,7 @@ void DiffDrive::update() {
   if (pid_on_) {
     float uL = pidL_.compute(vL_, dt);
     float uR = pidR_.compute(vR_, dt);
-    Serial.printf("uL: %lf uR: %lf\n", uL, uR);
+    // Serial.printf("uL: %lf uR: %lf\n", uL, uR);
     writePercents_(uL, uR);
   }
 }
@@ -118,8 +126,8 @@ void DiffDrive::writeOnePercent_(MotorEnum side, float pct) {
   }
 }
 void DiffDrive::writePercents_(float l_pct, float r_pct) {
-  writeOnePercent_(MotorL, l_pct);
-  writeOnePercent_(MotorR, r_pct);
+  writeOnePercent_(MotorL, l_pct + diff_l);
+  writeOnePercent_(MotorR, r_pct + diff_r);
 }
 
 float DiffDrive::vLeft()   const { return vL_; }

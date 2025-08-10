@@ -4,8 +4,15 @@
 #include "motor.hpp"
 #include "encoder.hpp"
 #include "pid_controller.hpp"
+#include <math.h>
 
 #define TRACK_WIDTH_M 0.175f
+
+typedef struct Odom {
+  float x = 0.0f;
+  float y = 0.0f;
+  float yaw = 0.0f;
+} Odom_t;
 
 class DiffDrive {
 public:
@@ -25,6 +32,11 @@ public:
             float track_width_m,
             uint32_t sample_ms = 50,
             bool full_quad = false);
+
+  // Odom
+  const Odom& odom() { return odom_; }
+  void resetOdom(float x=0.f, float y=0.f, float yaw=0.f) { odom_.x=x; odom_.y=yaw==yaw? y: y; odom_.yaw=yaw; }
+
 
   void begin();
 
@@ -57,6 +69,19 @@ public:
   void enablePID(bool en);
 
 private:
+  
+  Odom_t odom_;
+
+  inline float wrapPi_(float a) const {
+    while (a >  PI) a -= 2*PI;
+    while (a <= -PI) a += 2*PI;
+    return a;
+  }
+
+  // opitional
+  float diff_l = 0.4;
+  float diff_r = 0;
+
   PID pidL_{6.f, 30.f, 0.2f};
   PID pidR_{6.f, 30.f, 0.2f};
   bool  pid_on_ = false;
