@@ -79,7 +79,7 @@ private:
   }
 
   // opitional
-  float diff_l = 0.4;
+  float diff_l = 0.1;
   float diff_r = 0;
 
   PID pidL_{6.f, 30.f, 0.2f};
