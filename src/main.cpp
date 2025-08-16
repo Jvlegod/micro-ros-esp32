@@ -8,6 +8,7 @@
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
+#include "serial_bridge.hpp"
 
 #ifdef USE_ULTRASONIC
 UltrasonicInit ultrasonicSensor(ULTRASONIC_TRIG, ULTRASONIC_ECHO);
@@ -23,8 +24,9 @@ DiffDrive::Pins pins{
 DiffDrive diff_drive(pins, DIST_PER_PULSE_M, TRACK_WIDTH_M, 20, true);
 #endif
 void setup() {
-    Serial.begin(115200);
+    Serial.begin(9600);
 
+#ifdef USE_MICRO_AGENT
     uros::InitConfig cfg;
     cfg.ssid = WIFI_SSID;
     cfg.pass = WIFI_PASS;
@@ -34,6 +36,7 @@ void setup() {
     cfg.executor_handles = 2;
     uros::configure(cfg);
     xTaskCreate(uros::uros_task_entry, "uros_handler", 8192, nullptr, 3, nullptr);
+#endif
 #ifdef USE_DIFF_DRIVE
     diff_drive.begin();
     diff_drive.setPIDGains(60.0f, 100.0f, 1.0f);
@@ -61,8 +64,15 @@ void setup() {
 void loop() {
 #ifdef USE_DIFF_DRIVE
     diff_drive.update();
+#else
+    serial_bridge::poll();
+    // serial_bridge::OdomMsg ext;
+    // serial_bridge::poll();
+    // bool has = pop_last_odom(ext);
+    // if (has) {
+    //     serial_bridge::send_cmd_vel(ext.x, ext.y);
+    // }
 #endif
-
     // const Odom& o = diff_drive.odom();
     // Serial.printf("x=%.3f m  y=%.3f m  yaw=%.3f rad\n", o.x, o.y, o.yaw);
     // Serial.printf("leftCount: %lld, rightCount: %lld\n", diff_drive.leftCount(), diff_drive.rightCount());
